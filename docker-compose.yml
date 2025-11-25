@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: credit-db
+    restart: always
+    environment:
+      POSTGRES_USER: suresh
+      POSTGRES_PASSWORD: secret123
+      POSTGRES_DB: credit_logs
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: credit-api
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
+
