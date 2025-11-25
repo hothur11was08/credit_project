@@ -52,25 +52,10 @@ pipeline {
 
         stage('Drift Detection') {
             steps {
-                // Run drift detection script if present
                 sh 'docker-compose run api python scripts/drift_detection.py || true'
                 archiveArtifacts artifacts: 'drift_reports/*.png', fingerprint: true, allowEmptyArchive: true
             }
         }
-
-        stage('Archive Metrics') {
-            steps {
-                sh 'curl -s ${API_URL}/performance/latest > performance_latest.json || true'
-                sh 'curl -s ${API_URL}/drift/latest > drift_latest.json || true'
-                archiveArtifacts artifacts: 'performance_latest.json, drift_latest.json', fingerprint: true, allowEmptyArchive: true
-            }
-        }
-    }
-
-    post {
-        always {
-            // Clean up containers to avoid conflicts next run
-            sh 'docker-compose down'
-        }
     }
 }
+
