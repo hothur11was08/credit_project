@@ -18,16 +18,31 @@ pipeline {
             }
         }
 
-        stage('Deploy & Test') {
+        stage('Deploy & Health Check') {
             steps {
-                // Run containers in foreground, exit when API container finishes
-                sh 'docker-compose up --abort-on-container-exit --exit-code-from api'
+                // Start containers in detached mode
+                sh 'docker-compose up -d'
+                // Wait until API is ready
+                sh '''
+                  for i in {1..20}; do
+                    curl -s ${API_URL}/schema && exit 0
+                    sleep 2
+                  done
+                  echo "API did not start in time" && exit 1
+                '''
+            }
+        }
+
+        stage('Sanity Checks') {
+            steps {
+                sh 'curl -s ${API_URL}/schema'
+                sh 'curl -s -X POST ${API_URL}/performance/compute -H "Content-Type: application/json" -d \'{"window_hours":24}\''
+                sh 'curl -s -X POST ${API_URL}/drift/compute -H "Content-Type: application/json" -d \'{"window_hours":24}\''
             }
         }
 
         stage('Train Model') {
             steps {
-                // Run training script inside API container
                 sh 'docker-compose run api python scripts/train.py'
                 archiveArtifacts artifacts: 'models/*.h5', fingerprint: true
             }
@@ -35,7 +50,6 @@ pipeline {
 
         stage('Drift Detection') {
             steps {
-                // Run drift detection script
                 sh 'docker-compose run api python scripts/drift_detection.py'
                 archiveArtifacts artifacts: 'drift_reports/*.png', fingerprint: true
             }
