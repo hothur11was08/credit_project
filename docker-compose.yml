@@ -22,6 +22,9 @@ services:
       - postgres
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app        # Mount your project folder into the container
+    working_dir: /app # Ensure scripts run from /app inside the container
 
 volumes:
   pgdata:
