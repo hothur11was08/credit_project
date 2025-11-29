@@ -1,5 +1,20 @@
+# Virtual environments
 .venv/
-.venv/
+
+# macOS system files
 .DS_Store
-.venv/
-.venv/
+
+# Editor swap files
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Drift detection artifacts
+drift_reports/
+
+# Other build artifacts
+artifacts/
+
