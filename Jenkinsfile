@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         API_URL = "http://localhost:8000"
+        PATH = "/usr/local/bin:/usr/bin:/bin"  // ensure Jenkins sees docker binaries
     }
 
     stages {
@@ -14,14 +15,14 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'docker-compose build'
+                sh '/usr/local/bin/docker-compose build'
             }
         }
 
         stage('Deploy & Health Check') {
             steps {
                 // Start containers in detached mode
-                sh 'docker-compose up -d'
+                sh '/usr/local/bin/docker-compose up -d'
                 // Wait until API is ready
                 sh '''
                   for i in {1..20}; do
@@ -45,14 +46,14 @@ pipeline {
         stage('Train Model') {
             steps {
                 // Run training script if present
-                sh 'docker-compose run api python scripts/train.py || true'
+                sh '/usr/local/bin/docker-compose run api python scripts/train.py || true'
                 archiveArtifacts artifacts: 'models/*.h5', fingerprint: true, allowEmptyArchive: true
             }
         }
 
         stage('Drift Detection') {
             steps {
-                sh 'docker-compose run api python scripts/drift_detection.py || true'
+                sh '/usr/local/bin/docker-compose run api python scripts/drift_detection.py || true'
                 archiveArtifacts artifacts: 'drift_reports/*.png', fingerprint: true, allowEmptyArchive: true
             }
         }
